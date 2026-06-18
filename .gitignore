@@ -1,0 +1,9 @@
+*.csv
+*.xlsx
+*.zip
+__pycache__/
+.DS_Store
+Humidity Plots Interactive/REP-*/
+Humidity Plots Interactive/serial_*.html
+Humidity Plots Interactive/group_*.html
+Humidity Plots Interactive/dashboard_live.html

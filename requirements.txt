@@ -1,0 +1,5 @@
+flask
+pyathena
+pandas
+boto3
+openpyxl

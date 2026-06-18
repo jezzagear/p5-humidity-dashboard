@@ -1,0 +1,349 @@
+{
+  "serials": {
+    "005-0062-18899": {
+      "group_code": "REP-501P",
+      "rep": "REP-501",
+      "variant": "P"
+    },
+    "005-0062-18909": {
+      "group_code": "REP-501P",
+      "rep": "REP-501",
+      "variant": "P"
+    },
+    "005-0062-18918": {
+      "group_code": "REP-501P",
+      "rep": "REP-501",
+      "variant": "P"
+    },
+    "005-0062-18580": {
+      "group_code": "REP-501V1",
+      "rep": "REP-501",
+      "variant": "V1"
+    },
+    "005-0062-18922": {
+      "group_code": "REP-501V1",
+      "rep": "REP-501",
+      "variant": "V1"
+    },
+    "005-0062-18522": {
+      "group_code": "REP-501V3",
+      "rep": "REP-501",
+      "variant": "V3"
+    },
+    "005-0062-18529": {
+      "group_code": "REP-501V5",
+      "rep": "REP-501",
+      "variant": "V5"
+    },
+    "005-0062-18587": {
+      "group_code": "REP-501V5",
+      "rep": "REP-501",
+      "variant": "V5"
+    },
+    "005-0062-18594": {
+      "group_code": "REP-501V5",
+      "rep": "REP-501",
+      "variant": "V5"
+    },
+    "005-0062-18549": {
+      "group_code": "REP-501V6",
+      "rep": "REP-501",
+      "variant": "V6"
+    },
+    "005-0062-18560": {
+      "group_code": "REP-501V6",
+      "rep": "REP-501",
+      "variant": "V6"
+    },
+    "005-0062-18911": {
+      "group_code": "REP-502P",
+      "rep": "REP-502",
+      "variant": "P"
+    },
+    "005-0062-18931": {
+      "group_code": "REP-502P",
+      "rep": "REP-502",
+      "variant": "P"
+    },
+    "005-0062-18935": {
+      "group_code": "REP-502P",
+      "rep": "REP-502",
+      "variant": "P"
+    },
+    "005-0062-18583": {
+      "group_code": "REP-502V1",
+      "rep": "REP-502",
+      "variant": "V1"
+    },
+    "005-0062-18915": {
+      "group_code": "REP-502V1",
+      "rep": "REP-502",
+      "variant": "V1"
+    },
+    "005-0062-18925": {
+      "group_code": "REP-502V1",
+      "rep": "REP-502",
+      "variant": "V1"
+    },
+    "005-0062-18541": {
+      "group_code": "REP-502V2",
+      "rep": "REP-502",
+      "variant": "V2"
+    },
+    "005-0062-18552": {
+      "group_code": "REP-502V2",
+      "rep": "REP-502",
+      "variant": "V2"
+    },
+    "005-0062-18562": {
+      "group_code": "REP-502V2",
+      "rep": "REP-502",
+      "variant": "V2"
+    },
+    "005-0062-18520": {
+      "group_code": "REP-502V3",
+      "rep": "REP-502",
+      "variant": "V3"
+    },
+    "005-0062-18530": {
+      "group_code": "REP-502V3",
+      "rep": "REP-502",
+      "variant": "V3"
+    },
+    "005-0062-18533": {
+      "group_code": "REP-502V3",
+      "rep": "REP-502",
+      "variant": "V3"
+    },
+    "005-0062-18539": {
+      "group_code": "REP-502V3",
+      "rep": "REP-502",
+      "variant": "V3"
+    },
+    "005-0062-18573": {
+      "group_code": "REP-502V5",
+      "rep": "REP-502",
+      "variant": "V5"
+    },
+    "005-0062-18579": {
+      "group_code": "REP-502V5",
+      "rep": "REP-502",
+      "variant": "V5"
+    },
+    "005-0062-18586": {
+      "group_code": "REP-502V5",
+      "rep": "REP-502",
+      "variant": "V5"
+    },
+    "005-0062-18601": {
+      "group_code": "REP-502V5",
+      "rep": "REP-502",
+      "variant": "V5"
+    },
+    "005-0062-18558": {
+      "group_code": "REP-502V6",
+      "rep": "REP-502",
+      "variant": "V6"
+    },
+    "005-0062-18577": {
+      "group_code": "REP-502V6",
+      "rep": "REP-502",
+      "variant": "V6"
+    },
+    "005-0062-18581": {
+      "group_code": "REP-502V6",
+      "rep": "REP-502",
+      "variant": "V6"
+    },
+    "005-0062-18561": {
+      "group_code": "REP-503P",
+      "rep": "REP-503",
+      "variant": "P"
+    },
+    "005-0062-18564": {
+      "group_code": "REP-503P",
+      "rep": "REP-503",
+      "variant": "P"
+    },
+    "005-0062-18923": {
+      "group_code": "REP-503P",
+      "rep": "REP-503",
+      "variant": "P"
+    },
+    "005-0062-18928": {
+      "group_code": "REP-503P",
+      "rep": "REP-503",
+      "variant": "P"
+    },
+    "005-0062-18569": {
+      "group_code": "REP-503V1",
+      "rep": "REP-503",
+      "variant": "V1"
+    },
+    "005-0062-18571": {
+      "group_code": "REP-503V1",
+      "rep": "REP-503",
+      "variant": "V1"
+    },
+    "005-0062-18584": {
+      "group_code": "REP-503V1",
+      "rep": "REP-503",
+      "variant": "V1"
+    },
+    "005-0062-18543": {
+      "group_code": "REP-503V2",
+      "rep": "REP-503",
+      "variant": "V2"
+    },
+    "005-0062-18545": {
+      "group_code": "REP-503V2",
+      "rep": "REP-503",
+      "variant": "V2"
+    },
+    "005-0062-18553": {
+      "group_code": "REP-503V2",
+      "rep": "REP-503",
+      "variant": "V2"
+    },
+    "005-0062-18519": {
+      "group_code": "REP511-V3",
+      "rep": "REP-511",
+      "variant": "V3"
+    },
+    "005-0062-18524": {
+      "group_code": "REP511-V3",
+      "rep": "REP-511",
+      "variant": "V3"
+    },
+    "005-0062-18534": {
+      "group_code": "REP-503V3",
+      "rep": "REP-503",
+      "variant": "V3"
+    },
+    "005-0062-18544": {
+      "group_code": "REP511-V3",
+      "rep": "REP-511",
+      "variant": "V3"
+    },
+    "005-0062-18585": {
+      "group_code": "REP-503V5",
+      "rep": "REP-503",
+      "variant": "V5"
+    },
+    "005-0062-18665": {
+      "group_code": "REP-503V5",
+      "rep": "REP-503",
+      "variant": "V5"
+    },
+    "005-0062-18565": {
+      "group_code": "REP-503V6",
+      "rep": "REP-503",
+      "variant": "V6"
+    },
+    "005-0062-17029": {
+      "group_code": "REP-510P",
+      "rep": "REP-510",
+      "variant": "P"
+    },
+    "005-0062-18900": {
+      "group_code": "REP-510P",
+      "rep": "REP-510",
+      "variant": "P"
+    },
+    "005-0062-18910": {
+      "group_code": "REP-510P",
+      "rep": "REP-510",
+      "variant": "P"
+    },
+    "005-0062-18914": {
+      "group_code": "REP-510P",
+      "rep": "REP-510",
+      "variant": "P"
+    },
+    "005-0062-18537": {
+      "group_code": "REP-510V3",
+      "rep": "REP-510",
+      "variant": "V3"
+    },
+    "005-0062-18547": {
+      "group_code": "REP-510V3",
+      "rep": "REP-510",
+      "variant": "V3"
+    },
+    "005-0062-18531": {
+      "group_code": "REP-510V5",
+      "rep": "REP-510",
+      "variant": "V5"
+    },
+    "005-0062-18590": {
+      "group_code": "REP-510V5",
+      "rep": "REP-510",
+      "variant": "V5"
+    },
+    "005-0062-18591": {
+      "group_code": "REP-510V5",
+      "rep": "REP-510",
+      "variant": "V5"
+    },
+    "005-0062-18595": {
+      "group_code": "REP-510V5",
+      "rep": "REP-510",
+      "variant": "V5"
+    },
+    "005-0062-18606": {
+      "group_code": "REP-510V5",
+      "rep": "REP-510",
+      "variant": "V5"
+    },
+    "005-0062-18559": {
+      "group_code": "REP-510V6",
+      "rep": "REP-510",
+      "variant": "V6"
+    },
+    "005-0062-18898": {
+      "group_code": "REP511-P",
+      "rep": "REP-511",
+      "variant": "P"
+    },
+    "005-0062-18901": {
+      "group_code": "REP511-P",
+      "rep": "REP-511",
+      "variant": "P"
+    },
+    "005-0062-18908": {
+      "group_code": "REP511-P",
+      "rep": "REP-511",
+      "variant": "P"
+    },
+    "005-0062-18926": {
+      "group_code": "REP511-P",
+      "rep": "REP-511",
+      "variant": "P"
+    },
+    "005-0062-18556": {
+      "group_code": "REP511-V5",
+      "rep": "REP-511",
+      "variant": "V5"
+    },
+    "005-0062-18589": {
+      "group_code": "REP511-V5",
+      "rep": "REP-511",
+      "variant": "V5"
+    },
+    "005-0062-18596": {
+      "group_code": "REP511-V5",
+      "rep": "REP-511",
+      "variant": "V5"
+    },
+    "005-0062-18563": {
+      "group_code": "REP511-V6",
+      "rep": "REP-511",
+      "variant": "V6"
+    },
+    "005-0062-18578": {
+      "group_code": "REP511-V6",
+      "rep": "REP-511",
+      "variant": "V6"
+    }
+  }
+}
