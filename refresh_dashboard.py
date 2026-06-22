@@ -16,7 +16,8 @@ S3_STAGING_DIR   = "s3://aws-athena-query-results-687061330321-ap-southeast-2/"
 AWS_REGION       = "ap-southeast-2"
 ATHENA_WORKGROUP = "general_research_workgroup"
 GROUP_RESAMPLE_MIN  = 5    # group view: average window in minutes
-SERIAL_RESAMPLE_SEC = 30   # serial view: resolution in seconds (30s native; set to 300 before sharing as final report)
+SERIAL_RESAMPLE_SEC_LOCAL  = 30   # for local dashboard.html (open directly in Chrome)
+SERIAL_RESAMPLE_SEC_SHARE  = 300  # for index.html pushed to GitHub Pages (keeps file <20MB)
 
 REP_START_DATES = {
     "REP-501": "2026-06-10",
@@ -98,7 +99,7 @@ def fetch_all() -> pd.DataFrame:
     return combined
 
 # ── Process ───────────────────────────────────────────────────────────────────
-def process(df: pd.DataFrame) -> dict:
+def process(df: pd.DataFrame, serial_resample_sec: int = 300) -> dict:
     df["sample_time"] = pd.to_datetime(df["sample_time"], utc=True)
     df["group_code"]  = df["serial_number"].map(lambda s: GROUP_MAPPING.get(s, {}).get("group_code", "UNKNOWN"))
     df["variant"]     = df["serial_number"].map(lambda s: GROUP_MAPPING.get(s, {}).get("variant", "?"))
@@ -106,7 +107,7 @@ def process(df: pd.DataFrame) -> dict:
 
     COLS        = ["main_humidity_pct", "cue_humidity_pct", "main_humidity_temp_c", "cue_humidity_temp_c"]
     group_rule  = f"{GROUP_RESAMPLE_MIN}min"
-    serial_rule = f"{SERIAL_RESAMPLE_SEC}s"
+    serial_rule = f"{serial_resample_sec}s"
 
     groups_out, serials_out = {}, {}
 
@@ -493,13 +494,21 @@ if __name__ == "__main__":
     if df.empty:
         sys.exit("[ERROR] No data returned from Athena.")
 
-    print("Processing…")
-    data = process(df)
+    # ── Local dashboard (30s serial resolution) ───────────────────────────────
+    print(f"Processing at {SERIAL_RESAMPLE_SEC_LOCAL}s resolution (local)…")
+    data_local = process(df, serial_resample_sec=SERIAL_RESAMPLE_SEC_LOCAL)
+    html_local = build_html(data_local)
+    OUT_HTML.write_text(html_local, encoding="utf-8")
+    size_local = OUT_HTML.stat().st_size / 1024 / 1024
+    print(f"    dashboard.html → {size_local:.1f} MB  (open locally in Chrome)")
 
-    print(f"Building HTML…")
-    html = build_html(data)
-    OUT_HTML.write_text(html, encoding="utf-8")
+    # ── Shareable dashboard (300s serial resolution for GitHub Pages) ─────────
+    print(f"Processing at {SERIAL_RESAMPLE_SEC_SHARE}s resolution (share)…")
+    data_share = process(df, serial_resample_sec=SERIAL_RESAMPLE_SEC_SHARE)
+    html_share = build_html(data_share)
+    OUT_INDEX = OUT_HTML.parent / "index.html"
+    OUT_INDEX.write_text(html_share, encoding="utf-8")
+    size_share = OUT_INDEX.stat().st_size / 1024 / 1024
+    print(f"    index.html     → {size_share:.1f} MB  (push to GitHub Pages)")
 
-    size_mb = OUT_HTML.stat().st_size / 1024 / 1024
-    print(f"\n✅  Done — {OUT_HTML.name} updated ({size_mb:.1f} MB)")
-    print(f"    Open:  {OUT_HTML}")
+    print(f"\n✅  Done — {OUT_HTML.parent}")
