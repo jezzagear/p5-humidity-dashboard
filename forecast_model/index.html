@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P5 Collar — Forecast Model Dashboard</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #fff; --border: #e5e7eb;
+    --text: #0f172a; --muted: #64748b; --accent: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 28px; }
+  .eyebrow {
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: -0.02em; font-weight: 700; }
+  .lede { color: var(--muted); font-size: 16px; max-width: 720px; margin: 0 0 32px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .card {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.05);
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .card-title { font-size: 18px; font-weight: 600; margin: 0 0 8px; color: var(--text); }
+  .card-desc { font-size: 14px; color: var(--muted); margin: 0; }
+  .card-tag {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .footer { color: var(--muted); font-size: 11px; margin-top: 48px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="eyebrow">Halter · P5 Collar</div>
+  <h1>Forecast Model Dashboard</h1>
+  <p class="lede">
+    Physics-based moisture-ingress simulation for the P5 collar. Three views:
+    how the model works, what it predicts over 6 years, and how design variants compare.
+  </p>
+
+  <div class="grid">
+    <a class="card" href="model_documentation.html">
+      <span class="card-tag">01 · Model</span>
+      <div class="card-title">Model documentation</div>
+      <p class="card-desc">
+        Interactive collar cross-section with clickable hotspots — see what is and isn't modelled for each component, and step through the 8-step computation flow.
+      </p>
+    </a>
+
+    <a class="card" href="rh_timeseries_interactive.html">
+      <span class="card-tag">02 · Forecast</span>
+      <div class="card-title">6-year RH timeseries</div>
+      <p class="card-desc">
+        Internal cavity RH over the full 2019–2024 ERA5 weather period. Compare two design variants overlaid at any location, with external RH and ambient T also shown.
+      </p>
+    </a>
+
+    <a class="card" href="forecast_matrix_interactive.html">
+      <span class="card-tag">03 · Comparison</span>
+      <div class="card-title">Design variant comparison</div>
+      <p class="card-desc">
+        Ranking of 12 design variants (3 materials × 4 configurations including sealed-bung) at each location, by any of 9 performance metrics including retained moisture, warm-wet hours, and condensation events.
+      </p>
+    </a>
+  </div>
+
+  <div class="footer">
+    Halter · P5 Collar Moisture Ingress Model · 2026-06-26
+  </div>
+</div>
+</body>
+</html>
