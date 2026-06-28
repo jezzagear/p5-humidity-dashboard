@@ -428,6 +428,10 @@
                  data-label="TPU potting (not visible)"
                  style="left:70%; top:22%;"></div>
 
+            <div class="hotspot invisible-marker" data-component="internal_components"
+                 data-label="Internal components (PCBs, frames, antenna, transformer)"
+                 style="left:25%; top:65%;"></div>
+
             <div class="hotspot invisible-marker" data-component="desiccant"
                  data-label="Desiccant (not shown — optional)"
                  style="left:50%; top:43%;"></div>
@@ -968,9 +972,10 @@
     potting: {
       title: "TPU potting (not visible in this view)",
       modelled: [
-        "Water sorption sink only (absorbs from cavity vapour)",
+        "Water sorption sink (absorbs from local tub cavity vapour)",
         "First-order sorption kinetics with τ time constant",
-        "60 / 40 mass split between Cue and Main",
+        "60 / 40 mass split between Cue and Main tubs",
+        "Lumped together with internal components in the same sink (shared kinetics)",
       ],
       not_modelled: [
         "Through-potting moisture transport to electronics surface",
@@ -982,12 +987,39 @@
         ["Material", "TPU potting 21-1208 (2-part)"],
         ["Total mass per collar", "65 g"],
         ["Split (Cue / Main)", "60 / 40 %"],
-        ["Water uptake at saturation", "0.20 %"],
+        ["Water uptake at 40 °C / 85 % RH", "0.85 % (pragmatic fit, supplier 0.20 %)"],
         ["Sorption time constant τ", "6000 min"],
       ],
       sources: [
-        ["badge-meas", "Uptake — supplier 21-1208 immersion data"],
+        ["badge-calib", "Uptake bumped from supplier 0.20 % (24 h immersion at 23 °C) to 0.85 % as a pragmatic fit to REP-501 gravimetric mass-gain data (2026-06-28). Pending direct cut-sample test on cured 21-1208 at 40 °C / 85 % RH."],
         ["badge-calib", "τ — internal estimate"],
+      ]
+    },
+    internal_components: {
+      title: "Internal components (lumped sorption sink)",
+      modelled: [
+        "PCB FR4 substrate (Cue and Main PCBs)",
+        "Transformer housing (Rynite FR350)",
+        "Cue frame and Battery frame (MAKROLON LQ2887 PC)",
+        "Antenna plastic (PC LNP THERMOCOMP DX11355)",
+        "Treated as a lumped sorption capacity, shares kinetics with potting",
+      ],
+      not_modelled: [
+        "Solar cell encapsulant adhesive — TBC volume; likely small contributor",
+        "Transformer epoxy resin potting — TBC volume",
+        "Cables, connectors, conformal coatings, smaller components",
+        "Battery cell electrolyte water absorption",
+      ],
+      params: [
+        ["Total polymer mass (Cue + Main)", "29.3 g"],
+        ["Split (Cue / Main)", "44 % / 56 %"],
+        ["Weighted-avg uptake at 40 °C / 85 % RH", "0.27 %"],
+        ["Cue side mass breakdown", "Transformer housing 4.85 g + Cue frame 2.46 g + Cue PCB 5.63 g"],
+        ["Main side mass breakdown", "Antenna 4.00 g + Battery frame 7.74 g + Main PCB 4.62 g"],
+      ],
+      sources: [
+        ["badge-cad", "Component volumes from OnShape; densities from material datasheets"],
+        ["badge-lit", "Per-material uptake from supplier datasheets (PC, FR4, Rynite FR350)"],
       ]
     },
     desiccant: {
