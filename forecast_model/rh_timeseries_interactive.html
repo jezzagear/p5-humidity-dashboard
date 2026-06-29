@@ -64,6 +64,46 @@
     font-size: 14px;
   }
   #chart { width: 100%; height: 700px; }
+  .date-controls {
+    display: grid;
+    grid-template-columns: 180px 180px 1fr;
+    gap: 16px;
+    align-items: end;
+    margin: 12px 0 4px;
+  }
+  .date-controls input[type="date"] {
+    width: 100%; padding: 7px 10px;
+    font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: white; color: var(--text);
+  }
+  .date-controls input[type="date"]:focus {
+    outline: none; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+  .date-preset-row {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .date-preset {
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--muted);
+    font-size: 12px; font-weight: 500;
+    font-family: inherit;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .date-preset:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+  }
+  .date-preset.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+  }
   .hint { font-size: 12px; color: var(--muted); margin-top: 8px;
           padding: 8px 12px; background: #f1f5f9; border-radius: 6px; }
   .footer { text-align: center; color: var(--muted); font-size: 11px;
@@ -96,9 +136,31 @@
       </div>
     </div>
 
+    <div class="date-controls">
+      <div class="control-group">
+        <label for="date-start">From</label>
+        <input type="date" id="date-start">
+      </div>
+      <div class="control-group">
+        <label for="date-end">To</label>
+        <input type="date" id="date-end">
+      </div>
+      <div class="date-preset-row">
+        <button class="date-preset" data-range="all">All</button>
+        <button class="date-preset" data-range="last-year">Last year</button>
+        <button class="date-preset" data-range="last-6mo">Last 6 mo</button>
+        <button class="date-preset" data-range="2024">2024</button>
+        <button class="date-preset" data-range="2023">2023</button>
+        <button class="date-preset" data-range="2022">2022</button>
+        <button class="date-preset" data-range="2021">2021</button>
+        <button class="date-preset" data-range="2020">2020</button>
+        <button class="date-preset" data-range="2019">2019</button>
+      </div>
+    </div>
+
     <div id="chart"></div>
     <div class="hint">
-      Click a series in the legend to hide or show it. Double-click to isolate just that one. Set <b>Variant B</b> to <i>(None)</i> to view only Variant A.
+      Click a series in the legend to hide or show it. Visibility settings are remembered when you change variant / location. Double-click to isolate just one. Set <b>Variant B</b> to <i>(None)</i> for a single-variant view.
     </div>
   </div>
 
@@ -148,6 +210,43 @@
   const COLOR_A_LIGHT = "rgba(37,99,235,0.35)";
   const COLOR_B_LIGHT = "rgba(234,88,12,0.35)";
 
+  // Stable role IDs so we can remember visibility across re-renders even when
+  // the displayed variant name changes.
+  const ROLE = {
+    AMBIENT_T:    "ambient_t",
+    EXTERNAL_RH:  "external_rh",
+    A_RH_MEAN:    "A_rh_mean",
+    A_RH_MAX:     "A_rh_max",
+    A_LIQUID:     "A_liquid",
+    A_FROST:      "A_frost",
+    B_RH_MEAN:    "B_rh_mean",
+    B_RH_MAX:     "B_rh_max",
+    B_LIQUID:     "B_liquid",
+    B_FROST:      "B_frost",
+  };
+  // role -> last user-toggled visibility (true | false | "legendonly")
+  const visibilityState = {};
+
+  function captureVisibility() {
+    const chart = document.getElementById("chart");
+    if (!chart.data) return;
+    chart.data.forEach(t => {
+      if (t.meta && t.meta.role) {
+        // visible can be true | false | "legendonly". Default (undefined) = true.
+        visibilityState[t.meta.role] = (t.visible === undefined) ? true : t.visible;
+      }
+    });
+  }
+
+  function applyRememberedVisibility(traces) {
+    traces.forEach(t => {
+      if (t.meta && t.meta.role && t.meta.role in visibilityState) {
+        t.visible = visibilityState[t.meta.role];
+      }
+    });
+    return traces;
+  }
+
   function buildTraces(loc, varA, varB) {
     const locBlock = D.by_location[loc];
     if (!locBlock) return [];
@@ -162,66 +261,66 @@
       type: "scatter", mode: "lines",
       line: {color: "rgba(100,116,139,0.55)", width: 1},
       hovertemplate: "<b>%{x}</b><br>T amb: %{y:.1f} °C<extra></extra>",
+      meta: {role: ROLE.AMBIENT_T},
     });
 
-    // Ambient RH from Open-Meteo (primary axis, faded green)
+    // Ambient RH from Open-Meteo
     traces.push({
       x: dates, y: locBlock.ambient_rh,
       name: "External RH (Open-Meteo)",
       type: "scatter", mode: "lines",
       line: {color: "rgba(75,85,99,0.55)", width: 1, dash: "dot"},
       hovertemplate: "<b>%{x}</b><br>External RH: %{y:.1f}%<extra></extra>",
+      meta: {role: ROLE.EXTERNAL_RH},
     });
 
-    // Helper to add the 4 traces for one variant
-    function addVariant(varName, color, colorLight, suffix) {
+    function addVariant(varName, color, colorLight, suffix, roleMean, roleMax, roleLiquid, roleFrost) {
       if (!varName || varName === "__none__") return;
       const v = locBlock.variants[varName];
       if (!v) return;
-      // RH mean
+      // Stable name uses suffix only (varName is in title); ensures visibility-by-role is reliable.
       traces.push({
         x: dates, y: v.rh_mean,
-        name: suffix + ": " + varName + " — RH mean",
+        name: suffix + " · RH mean",
         type: "scatter", mode: "lines",
         line: {color: color, width: 1.8},
-        hovertemplate: "<b>%{x}</b><br>" + suffix + " RH mean: %{y:.1f}%<extra></extra>",
+        hovertemplate: "<b>%{x}</b><br>" + suffix + " (" + varName + ") RH mean: %{y:.1f}%<extra></extra>",
+        meta: {role: roleMean},
       });
-      // RH max
       traces.push({
         x: dates, y: v.rh_max,
-        name: suffix + ": " + varName + " — RH max",
+        name: suffix + " · RH max",
         type: "scatter", mode: "lines",
         line: {color: colorLight, width: 1, dash: "dot"},
-        hovertemplate: "<b>%{x}</b><br>" + suffix + " RH max: %{y:.1f}%<extra></extra>",
+        hovertemplate: "<b>%{x}</b><br>" + suffix + " (" + varName + ") RH max: %{y:.1f}%<extra></extra>",
+        meta: {role: roleMax},
       });
-      // Liquid cond markers
       if (v.liquid.length > 0) {
         traces.push({
           x: v.liquid, y: v.liquid.map(() => 100),
-          name: suffix + ": liquid condensation event",
+          name: suffix + " · liquid condensation",
           type: "scatter", mode: "markers",
-          marker: {color: color, size: 9, symbol: "circle",
-                   line: {color: "#fff", width: 1}},
-          hovertemplate: "<b>%{x}</b><br>" + suffix + " — liquid condensation<extra></extra>",
+          marker: {color: color, size: 9, symbol: "circle", line: {color: "#fff", width: 1}},
+          hovertemplate: "<b>%{x}</b><br>" + suffix + " (" + varName + ") — liquid condensation<extra></extra>",
+          meta: {role: roleLiquid},
         });
       }
-      // Frost markers
       if (v.frost.length > 0) {
         traces.push({
           x: v.frost, y: v.frost.map(() => 100),
-          name: suffix + ": frost event",
+          name: suffix + " · frost event",
           type: "scatter", mode: "markers",
-          marker: {color: color, size: 9, symbol: "diamond",
-                   line: {color: "#fff", width: 1}},
-          hovertemplate: "<b>%{x}</b><br>" + suffix + " — frost<extra></extra>",
+          marker: {color: color, size: 9, symbol: "diamond", line: {color: "#fff", width: 1}},
+          hovertemplate: "<b>%{x}</b><br>" + suffix + " (" + varName + ") — frost<extra></extra>",
+          meta: {role: roleFrost},
         });
       }
     }
 
-    addVariant(varA, COLOR_A, COLOR_A_LIGHT, "A");
-    addVariant(varB, COLOR_B, COLOR_B_LIGHT, "B");
+    addVariant(varA, COLOR_A, COLOR_A_LIGHT, "A", ROLE.A_RH_MEAN, ROLE.A_RH_MAX, ROLE.A_LIQUID, ROLE.A_FROST);
+    addVariant(varB, COLOR_B, COLOR_B_LIGHT, "B", ROLE.B_RH_MEAN, ROLE.B_RH_MAX, ROLE.B_LIQUID, ROLE.B_FROST);
 
-    return traces;
+    return applyRememberedVisibility(traces);
   }
 
   function layout(loc, varA, varB) {
@@ -273,17 +372,85 @@
     };
   }
 
+  // Date range state
+  const dateStart = document.getElementById("date-start");
+  const dateEnd   = document.getElementById("date-end");
+  dateStart.min = dates[0];
+  dateStart.max = dates[dates.length - 1];
+  dateEnd.min   = dates[0];
+  dateEnd.max   = dates[dates.length - 1];
+  dateStart.value = dates[0];
+  dateEnd.value   = dates[dates.length - 1];
+
+  let xRange = null;   // null = full range; [start, end] otherwise
+
+  function applyDateRange() {
+    const s = dateStart.value;
+    const e = dateEnd.value;
+    if (s && e && s <= e) {
+      xRange = [s, e];
+    } else {
+      xRange = null;
+    }
+  }
+
   function render() {
+    captureVisibility();   // remember user's legend toggles BEFORE rebuild
     const loc  = locSel.value;
     const varA = varASel.value;
     const varB = varBSel.value;
-    Plotly.react("chart", buildTraces(loc, varA, varB), layout(loc, varA, varB),
+    const lay = layout(loc, varA, varB);
+    if (xRange) lay.xaxis.range = xRange;
+    Plotly.react("chart", buildTraces(loc, varA, varB), lay,
                   {responsive: true, displayModeBar: false});
   }
 
   locSel.addEventListener("change", render);
   varASel.addEventListener("change", render);
   varBSel.addEventListener("change", render);
+
+  // Date controls
+  function onDateChange() {
+    applyDateRange();
+    // Just relayout the x-axis range — no need to rebuild traces
+    if (xRange) {
+      Plotly.relayout("chart", {"xaxis.range": xRange});
+    } else {
+      Plotly.relayout("chart", {"xaxis.autorange": true});
+    }
+    // Clear "active" preset highlight when user picks custom dates
+    document.querySelectorAll(".date-preset.active").forEach(b => b.classList.remove("active"));
+  }
+  dateStart.addEventListener("change", onDateChange);
+  dateEnd.addEventListener("change", onDateChange);
+
+  // Preset buttons
+  document.querySelectorAll(".date-preset").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const range = btn.dataset.range;
+      const lastDate = dates[dates.length - 1];
+      const firstDate = dates[0];
+      let s, e;
+      if (range === "all") {
+        s = firstDate; e = lastDate;
+      } else if (range === "last-year") {
+        const last = new Date(lastDate);
+        const start = new Date(last); start.setFullYear(start.getFullYear() - 1);
+        s = start.toISOString().slice(0, 10); e = lastDate;
+      } else if (range === "last-6mo") {
+        const last = new Date(lastDate);
+        const start = new Date(last); start.setMonth(start.getMonth() - 6);
+        s = start.toISOString().slice(0, 10); e = lastDate;
+      } else if (/^\d{4}$/.test(range)) {
+        s = range + "-01-01"; e = range + "-12-31";
+      }
+      dateStart.value = s; dateEnd.value = e;
+      applyDateRange();
+      Plotly.relayout("chart", {"xaxis.range": xRange});
+      document.querySelectorAll(".date-preset.active").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
 
   render();
 </script>
