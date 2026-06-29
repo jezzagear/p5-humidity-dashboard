@@ -40,6 +40,14 @@ HERE         = Path(__file__).parent
 MAPPING_FILE = HERE / "group_mapping.json"
 OUT_HTML     = HERE / "Humidity Plots Interactive" / "dashboard.html"
 
+# ── Chamber CSV paths (REP-502 and REP-503 only) ──────────────────────────────
+CHAMBER_FILES = {
+    "REP-502": HERE / "Chamber Data" / "REP-502_chamber.csv",
+    "REP-503": HERE / "Chamber Data" / "REP-503_chamber.csv",
+}
+# Chamber timestamps are DD/MM/YYYY HH:MM in NZST (UTC+12) — subtract 12h for UTC
+CHAMBER_TZ_OFFSET_H = 12
+
 # ── Load serial→group mapping ─────────────────────────────────────────────────
 with open(MAPPING_FILE) as f:
     GROUP_MAPPING = json.load(f)["serials"]
@@ -74,6 +82,42 @@ WHERE dsm.partition_metric_name = 'HARDWARE_DIAGNOSTICS'
   AND dsm.filter_utc_timestamp >= CAST('{since}' AS TIMESTAMP)
 ORDER BY serial_number, sample_time
 """
+
+def load_chamber_data() -> dict:
+    """Load REP-502 and REP-503 chamber CSVs, normalise timestamps to UTC, resample to 5-min."""
+    result = {}
+    for rep, path in CHAMBER_FILES.items():
+        if not path.exists():
+            print(f"[Chamber] {rep}: file not found at {path}, skipping")
+            continue
+        df = pd.read_csv(path)
+        # Rename columns for easy access
+        df.columns = [c.strip() for c in df.columns]
+        df = df.rename(columns={
+            "TIME":         "time_raw",
+            "TEMP PV[C]":  "chamber_temp_c",
+            "HUM PV[%rh]": "chamber_humidity_pct",
+        })[["time_raw", "chamber_temp_c", "chamber_humidity_pct"]]
+
+        # Parse DD/MM/YYYY HH:MM and convert NZST → UTC
+        df["sample_time"] = (
+            pd.to_datetime(df["time_raw"], format="%d/%m/%Y %H:%M", utc=False)
+            - pd.Timedelta(hours=CHAMBER_TZ_OFFSET_H)
+        )
+        df["sample_time"] = df["sample_time"].dt.tz_localize("UTC")
+        df = df.drop(columns=["time_raw"]).set_index("sample_time")
+        df = df.apply(pd.to_numeric, errors="coerce").dropna()
+
+        # Resample to 5-min mean (matches group view)
+        agg = df.resample("5min").mean().dropna()
+        result[rep] = {
+            "times":                agg.index.strftime("%Y-%m-%dT%H:%M").tolist(),
+            "chamber_humidity_pct": agg["chamber_humidity_pct"].round(2).tolist(),
+            "chamber_temp_c":       agg["chamber_temp_c"].round(2).tolist(),
+        }
+        print(f"[Chamber] {rep}: {len(agg)} 5-min points ({agg.index[0]} → {agg.index[-1]})")
+    return result
+
 
 def fetch_all() -> pd.DataFrame:
     try:
@@ -147,6 +191,7 @@ def process(df: pd.DataFrame, serial_resample_sec: int = 300) -> dict:
 
     return {
         "groups": groups_out, "serials": serials_out,
+        "chamber": load_chamber_data(),
         "refreshed_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -293,10 +338,12 @@ function fade(hex, a) {
 
 const REP_DASH   = {'REP-501':'solid','REP-502':'dash','REP-503':'dot','REP-510':'dashdot','REP-511':'longdash'};
 const SERIES_CFG = {
-  mh:{label:'Main Humidity %',yaxis:'y', lw:2.5,alpha:1.0},
-  ch:{label:'Cue Humidity %', yaxis:'y', lw:2.0,alpha:0.6},
-  mt:{label:'Main Temp °C',   yaxis:'y2',lw:2.5,alpha:1.0},
-  ct:{label:'Cue Temp °C',    yaxis:'y2',lw:2.0,alpha:0.6},
+  mh: {label:'Main Humidity %',     yaxis:'y',  lw:2.5,alpha:1.0},
+  ch: {label:'Cue Humidity %',      yaxis:'y',  lw:2.0,alpha:0.6},
+  mt: {label:'Main Temp °C',        yaxis:'y2', lw:2.5,alpha:1.0},
+  ct: {label:'Cue Temp °C',         yaxis:'y2', lw:2.0,alpha:0.6},
+  chh:{label:'Chamber Humidity %',  yaxis:'y',  lw:3.0,alpha:1.0},
+  cht:{label:'Chamber Temp °C',     yaxis:'y2', lw:3.0,alpha:1.0},
 };
 
 const SILENT_SUFFIXES = new Set(['18536','18542','10207','10516']);
@@ -307,6 +354,8 @@ function isSilent(key, d) {
 function buildTraces(view) {
   const src = view==='group' ? DATA.groups : DATA.serials;
   const traces = [];
+  // ── Collar sensor traces ──────────────────────────────────────────────────────
+  const sensorSeries = Object.entries(SERIES_CFG).filter(([k]) => k!=='chh' && k!=='cht');
   for (const [rep, items] of Object.entries(src||{})) {
     for (const [key, d] of Object.entries(items)) {
       const variant = d.variant||'P';
@@ -317,7 +366,7 @@ function buildTraces(view) {
       const alphaScale = silent ? 0.35 : 1.0;
       const lineDash   = silent ? 'dot' : rdash;
       let first = true;
-      for (const [ser, cfg] of Object.entries(SERIES_CFG)) {
+      for (const [ser, cfg] of sensorSeries) {
         traces.push({
           name: label, legendgroup: `${rep}__${key}`, showlegend: first,
           x: d.times, y: d[ser],
@@ -331,13 +380,33 @@ function buildTraces(view) {
       }
     }
   }
+  // ── Chamber reference traces (REP-502 and REP-503 only) ──────────────────────
+  for (const [rep, c] of Object.entries(DATA.chamber||{})) {
+    const chamberPairs = [
+      {ser:'chh', vals:c.chamber_humidity_pct, cfg:SERIES_CFG.chh},
+      {ser:'cht', vals:c.chamber_temp_c,       cfg:SERIES_CFG.cht},
+    ];
+    let first = true;
+    for (const {ser, vals, cfg} of chamberPairs) {
+      traces.push({
+        name:`${rep} Chamber`, legendgroup:`${rep}__CHAMBER`, showlegend:first,
+        x:c.times, y:vals,
+        type:'scatter', mode:'lines', yaxis:cfg.yaxis,
+        line:{color:'#222222', width:cfg.lw, dash:'dashdot'},
+        meta_rep:rep, meta_variant:'CHAMBER', meta_series:ser, meta_silent:false,
+        hovertemplate:`%{x}<br>${cfg.label}: %{y:.1f}<extra>${rep} Chamber</extra>`,
+        visible:true,
+      });
+      first = false;
+    }
+  }
   return traces;
 }
 
 let currentView    = 'group';
 let activeREPs     = new Set(Object.keys(DATA.groups||{}));
 let activeVariants = new Set(['P']);
-let activeSeries   = new Set(['mh','ch','mt','ct']);
+let activeSeries   = new Set(['mh','ch','mt','ct','chh','cht']);
 let showSilent     = false;
 let groupTraces    = buildTraces('group');
 let serialTraces   = buildTraces('serial');
@@ -365,6 +434,8 @@ const CONFIG = {responsive:true,displaylogo:false,
 
 function visibleTrace(t) {
   if (t.meta_silent && !showSilent) return false;
+  // Chamber traces bypass the variant filter — only check REP + series
+  if (t.meta_variant === 'CHAMBER') return activeREPs.has(t.meta_rep) && activeSeries.has(t.meta_series);
   return activeREPs.has(t.meta_rep) && activeVariants.has(t.meta_variant) && activeSeries.has(t.meta_series);
 }
 function applyFilters() {
@@ -438,7 +509,7 @@ for (const [v, col] of Object.entries(VARIANT_COLOR)) {
   varDiv.appendChild(chip);
 }
 const serDiv = document.getElementById('ser-chips');
-const serColors = {mh:'#1f77b4',ch:'#aec7e8',mt:'#d62728',ct:'#f5a0a0'};
+const serColors = {mh:'#1f77b4',ch:'#aec7e8',mt:'#d62728',ct:'#f5a0a0',chh:'#333333',cht:'#666666'};
 for (const [ser, cfg] of Object.entries(SERIES_CFG)) {
   const col = serColors[ser];
   const chip = makeChip(cfg.label, col, true, null);
