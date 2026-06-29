@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Halter Collar — Climate Locations Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+#map { width: 100vw; height: 100vh; }
+.leaflet-popup-content-wrapper {
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18) !important;
+  padding: 0 !important;
+  overflow: hidden;
+  max-width: 300px;
+}
+.leaflet-popup-content { margin: 0 !important; width: auto !important; }
+.leaflet-popup-tip-container { margin-top: -1px; }
+.popup-inner { padding: 14px 16px; }
+.popup-zone { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin-bottom: 8px; }
+.popup-name { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 6px; }
+.popup-desc { font-size: 12.5px; color: #555; line-height: 1.55; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const locations = [
+  {
+    name: "Ashburton, New Zealand",
+    lat: -43.9, lng: 171.75,
+    zone: "Temperate oceanic",
+    icon: "🌦️",
+    color: "#1D9E75",
+    bg: "#E1F5EE",
+    tc: "#0F6E56",
+    desc: "Cool, moist temperate climate with moderate rainfall year-round (~700mm/yr). Warm dry summers, cold frosty winters. Low humidity relative to coastal NZ. Canterbury plains location sheltered from westerly rain by Southern Alps."
+  },
+  {
+    name: "Methven, New Zealand",
+    lat: -43.63, lng: 171.65,
+    zone: "Temperate / Alpine foothills",
+    icon: "🏔️",
+    color: "#185FA5",
+    bg: "#E6F1FB",
+    tc: "#0C447C",
+    desc: "Similar temperate oceanic base as Ashburton but at higher elevation (~400m). Cooler temperatures with significant frost risk, occasional snow. Moderate rainfall, seasonal humidity swings. Strong foehn (nor'west) winds common."
+  },
+  {
+    name: "Cuiabá, Brazil",
+    lat: -15.6, lng: -56.1,
+    zone: "Hot & humid tropical savanna",
+    icon: "☀️",
+    color: "#D85A30",
+    bg: "#FAECE7",
+    tc: "#993C1D",
+    desc: "Tropical savanna (Köppen Aw). Extremely hot — avg highs 33–36°C. Distinct wet season (Oct–Mar) with intense convective rainfall and humidity 80–90%. Dry season (Apr–Sep) is still very warm. One of Brazil's hottest cities."
+  },
+  {
+    name: "Katherine, Australia",
+    lat: -14.47, lng: 132.27,
+    zone: "Hot tropical monsoon (wet-dry)",
+    icon: "🌩️",
+    color: "#BA7517",
+    bg: "#FAEEDA",
+    tc: "#854F0B",
+    desc: "Tropical monsoon climate (Köppen Am/Aw). Two seasons: wet (Nov–Apr) with extreme humidity 80–90%, heavy rain, temps 32–38°C; dry (May–Oct) warm and arid, low humidity. High condensation risk during wet season."
+  },
+  {
+    name: "Mareeba, Australia",
+    lat: -16.99, lng: 145.42,
+    zone: "Hot tropical wet-dry",
+    icon: "🌿",
+    color: "#3B6D11",
+    bg: "#EAF3DE",
+    tc: "#27500A",
+    desc: "Tropical wet-dry climate in Atherton Tablelands. Hot summers (28–33°C) with a pronounced wet season driven by Coral Sea moisture. Drier and slightly cooler than coastal Cairns due to elevation (~370m). Humidity spikes sharply Nov–Apr."
+  },
+  {
+    name: "Westlock, Canada",
+    lat: 54.15, lng: -114.4,
+    zone: "Cold continental (boreal)",
+    icon: "❄️",
+    color: "#534AB7",
+    bg: "#EEEDFE",
+    tc: "#3C3489",
+    desc: "Humid continental/boreal climate (Köppen Dfb). Harsh winters with temps to -30°C, significant snowpack. Short warm summers 22–26°C. Moderate rainfall (~450mm/yr). Very low absolute humidity in winter; high condensation risk on warm-up cycles."
+  }
+];
+
+const map = L.map('map', {
+  center: [15, 10],
+  zoom: 2,
+  scrollWheelZoom: true
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 12
+}).addTo(map);
+
+locations.forEach(loc => {
+  const markerHtml = `<div style="background:${loc.color};width:22px;height:22px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);cursor:pointer;"></div>`;
+  const icon = L.divIcon({ html: markerHtml, className: '', iconSize: [22,22], iconAnchor: [11,11], popupAnchor: [0,-14] });
+
+  const popupContent = `
+    <div class="popup-inner">
+      <span class="popup-zone" style="background:${loc.bg};color:${loc.tc};">${loc.icon} ${loc.zone}</span>
+      <div class="popup-name">${loc.name}</div>
+      <div class="popup-desc">${loc.desc}</div>
+    </div>`;
+
+  L.marker([loc.lat, loc.lng], { icon })
+    .addTo(map)
+    .bindPopup(popupContent, { maxWidth: 300, minWidth: 220 });
+});
+
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = () => {
+  const div = L.DomUtil.create('div');
+  div.style.cssText = 'background:white;padding:8px 10px;border-radius:8px;border:0.5px solid #ccc;font-size:11px;line-height:1.9;box-shadow:0 1px 6px rgba(0,0,0,0.12);';
+  div.innerHTML = locations.map(l =>
+    `<div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${l.color};flex-shrink:0;display:inline-block;"></span><span style="color:#333;">${l.name.split(',')[0]}</span></div>`
+  ).join('');
+  return div;
+};
+legend.addTo(map);
+</script>
+</body>
+</html>
